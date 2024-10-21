@@ -1,11 +1,17 @@
-import logo from "./logo.svg";
 import "./App.css";
-
 import React from "react";
-import FormularioRegistro from "./FormularioRegistro"; // Importa el formulario
+import CompFormularioRegistro from "./FormularioRegistro"; // Importa el formulario
+import { BrowserRouter, Route , Routes} from "react-router-dom";
 
 function App() {
-  return <FormularioRegistro />;
+  return (
+      <BrowserRouter>
+        <Routes>
+            <Route path="/" element={ <CompFormularioRegistro/> } />
+        </Routes>
+      </BrowserRouter>
+  )
+    
 }
 
 export default App;

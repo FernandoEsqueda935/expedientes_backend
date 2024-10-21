@@ -1,18 +1,37 @@
 import React, { useState, useEffect } from "react";
 import "./FormularioRegistro.css";
 import DatePickerComponent from "./DatePickerComponent";
+import { useNavigate } from "react-router-dom";
+import axios from "axios"; 
+
+const URI = "http://localhost:3001/expedientes";
 
 const QCHAT_test =
   "https://docs.google.com/forms/d/e/1FAIpQLSd9SgHqVPBoTbqz5ZQ6f9UDdIAJhSfoshkgFdRUjsYv0lYsnA/viewform";
 const SCQ_test =
   "https://docs.google.com/forms/d/e/1FAIpQLSfvTRcdS-ncsvY2zIhvE3x0qmlhqBQ3BeoBHoPiaWg-qHgsAw/viewform";
 
-function FormularioRegistro() {
-  const [patientBirthdate, setPatientBirthdate] = useState(null);
+const CompFormularioRegistro = () => {
+  const [patientBirthdate, setPatientBirthdate] = useState('');
   const [remitidoOtroHospital, setRemitidoOtroHospital] = useState(false);
   const [noNecesitaPruebas, setNoNecesitaPruebas] = useState(false);
   const [showQCHAT, setShowQCHAT] = useState(false);
   const [showSCQ, setShowSCQ] = useState(false);
+
+  const [exp_num, setExp_num] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [numero_tel, setNumero_tel] = useState('');
+  const [remitido, setRemitido] = useState(false);
+  const navigate = useNavigate();
+
+  const store = async (e) => {
+    e.preventDefault();
+    const formattedDate = patientBirthdate ? patientBirthdate.toISOString().split('T')[0] : null;
+    console.log(exp_num, nombre, formattedDate, numero_tel, remitido);
+    await axios.post(URI, {"exp_num":exp_num, "nombre":nombre, "fecha_nacimiento":formattedDate, "numero_tel":numero_tel, "remitido": remitido ? 1 : 0 });
+    alert("Formulario registrado");
+    navigate('/');
+  }
 
   useEffect(() => {
     if (patientBirthdate) {
@@ -24,8 +43,11 @@ function FormularioRegistro() {
     }
   }, [patientBirthdate]);
 
-  const manejarCambioRemitido = () => {
+  const manejarCambioRemitido = (event) => {
+      
+    setRemitido(event.target.checked);
     setRemitidoOtroHospital(!remitidoOtroHospital);
+
     if (!remitidoOtroHospital === false) {
       setNoNecesitaPruebas(false);
     }
@@ -36,11 +58,12 @@ function FormularioRegistro() {
       setNoNecesitaPruebas(!noNecesitaPruebas);
     }
   };
-
+/*
   const manejarRegistro = (e) => {
     e.preventDefault();
-    alert("Formulario registrado");
+    
   };
+*/
 
   const today = new Date();
   const minDate = new Date(today.setFullYear(today.getFullYear() - 18));
@@ -59,11 +82,15 @@ function FormularioRegistro() {
       </header>
 
       <div className="formulario-container">
-        <form onSubmit={manejarRegistro}>
+        <form onSubmit={store}>
           <div className="form-group">
             <label htmlFor="nombre">Nombre del paciente:</label>
             <input
               placeholder="Nombre completo"
+
+              value = {nombre}
+              onChange={(e) => setNombre(e.target.value)}
+
               type="text"
               id="nombre"
               name="nombre"
@@ -80,6 +107,9 @@ function FormularioRegistro() {
                 {/* Añadir más opciones de ladas según sea necesario */}
               </select>
               <input
+                value = {numero_tel}
+                onChange={(e) => setNumero_tel(e.target.value)}
+
                 type="tel"
                 id="telefonoTutor"
                 placeholder="Número telefónico"
@@ -107,6 +137,9 @@ function FormularioRegistro() {
             <div className="field-half">
               <label htmlFor="expediente">Número de expediente:</label>
               <input
+                value = {exp_num}
+                onChange={(e) => setExp_num(e.target.value)}
+
                 type="text"
                 placeholder="Número de expediente"
                 id="expediente"
@@ -119,10 +152,12 @@ function FormularioRegistro() {
           <div className="form-group checkbox">
             <label htmlFor="remitido">
               <input
+                
                 type="checkbox"
                 id="remitido"
                 name="remitido"
-                onChange={manejarCambioRemitido}
+                value={remitido}
+                onChange = {(e) => manejarCambioRemitido(e)} 
               />
               Remitido de otro hospital
             </label>
@@ -167,4 +202,4 @@ function FormularioRegistro() {
   );
 }
 
-export default FormularioRegistro;
+export default CompFormularioRegistro;
