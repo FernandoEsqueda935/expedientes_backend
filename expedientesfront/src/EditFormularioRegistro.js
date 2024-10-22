@@ -1,47 +1,45 @@
 import React, { useState, useEffect } from "react";
 import "./FormularioRegistro.css";
 import DatePickerComponent from "./DatePickerComponent";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios"; 
 
-const URI = "http://localhost:3001/expedientes";
+
 
 const QCHAT_test =
   "https://docs.google.com/forms/d/e/1FAIpQLSd9SgHqVPBoTbqz5ZQ6f9UDdIAJhSfoshkgFdRUjsYv0lYsnA/viewform";
 const SCQ_test =
   "https://docs.google.com/forms/d/e/1FAIpQLSfvTRcdS-ncsvY2zIhvE3x0qmlhqBQ3BeoBHoPiaWg-qHgsAw/viewform";
 
-const CompFormularioRegistro = () => {
+const EditCompFormularioRegistro = () => {
+  const URI = "http://localhost:3001/expedientes/" + useParams().exp_num;
+
   const [patientBirthdate, setPatientBirthdate] = useState('');
-  const [remitidoOtroHospital, setRemitidoOtroHospital] = useState(false);
-  const [noNecesitaPruebas, setNoNecesitaPruebas] = useState(false);
+  const [remitidoOtroHospital, setRemitidoOtroHospital] = useState('');
+  const [noNecesitaPruebas, setNoNecesitaPruebas] = useState('');
   const [showQCHAT, setShowQCHAT] = useState(false);
   const [showSCQ, setShowSCQ] = useState(false);
 
-  const [exp_num, setExp_num] = useState('');
   const [nombre, setNombre] = useState('');
+  const [exp_num, setExp_num] = useState('');
   const [numero_tel, setNumero_tel] = useState('');
-  const [remitido, setRemitido] = useState(false);
+  const [remitido, setRemitido] = useState('');
   const navigate = useNavigate();
 
-  const store = async (e) => {
-    e.preventDefault();
-    const formattedDate = patientBirthdate ? patientBirthdate.toISOString().split('T')[0] : null;
-    console.log(exp_num, nombre, formattedDate, numero_tel, remitido);
-    await axios.post(URI, {"exp_num":exp_num, "nombre":nombre, "fecha_nacimiento":formattedDate, "numero_tel":numero_tel, "remitido": remitido ? 1 : 0 });
-    alert("Formulario registrado");
-    navigate('/');
-  }
 
-  useEffect(() => {
-    if (patientBirthdate) {
-      const ageInMonths =
-        (new Date().getFullYear() - patientBirthdate.getFullYear()) * 12 +
-        (new Date().getMonth() - patientBirthdate.getMonth());
-      setShowQCHAT(ageInMonths < 48); // Menos de 4 años (48 meses)
-      setShowSCQ(ageInMonths >= 48); // 4 años o más
-    }
-  }, [patientBirthdate]);
+    useEffect(() => {
+        display();
+        }, []);
+
+    const display = async (e) => {
+      const data = await axios.get(URI);
+    setNombre(data.data.nombre);
+    setExp_num(data.data.exp_num);
+    setNumero_tel(data.data.numero_tel);
+    setPatientBirthdate(new Date (data.data.fecha_nacimiento));
+    setRemitido(data.data.remitido? true : false);
+    setRemitidoOtroHospital(data.data.remitido? true : false); 
+  }
 
   const manejarCambioRemitido = (event) => {
       
@@ -58,12 +56,25 @@ const CompFormularioRegistro = () => {
       setNoNecesitaPruebas(!noNecesitaPruebas);
     }
   };
-/*
-  const manejarRegistro = (e) => {
+
+  const store = async (e) => {
     e.preventDefault();
-    
-  };
-*/
+    const formattedDate = patientBirthdate ? patientBirthdate.toISOString().split('T')[0] : null;
+    console.log(exp_num, nombre, formattedDate, numero_tel, remitido);
+    await axios.put(URI, {"exp_num":exp_num, "nombre":nombre, "fecha_nacimiento":formattedDate, "numero_tel":numero_tel, "remitido": remitido ? 1 : 0 });
+    alert("Formulario actualizado");
+    navigate('/edit/');
+  }
+
+  useEffect(() => {
+    if (patientBirthdate) {
+      const ageInMonths =
+        (new Date().getFullYear() - patientBirthdate.getFullYear()) * 12 +
+        (new Date().getMonth() - patientBirthdate.getMonth());
+      setShowQCHAT(ageInMonths < 48); // Menos de 4 años (48 meses)
+      setShowSCQ(ageInMonths >= 48); // 4 años o más
+    }
+  }, [patientBirthdate]);
 
   const today = new Date();
   const minDate = new Date(today.setFullYear(today.getFullYear() - 18));
@@ -86,11 +97,11 @@ const CompFormularioRegistro = () => {
           <div className="form-group">
             <label htmlFor="nombre">Nombre del paciente:</label>
             <input
-              placeholder="Nombre completo"
+              
 
               value = {nombre}
               onChange={(e) => setNombre(e.target.value)}
-
+              placeholder="Nombre completo"
               type="text"
               id="nombre"
               name="nombre"
@@ -152,7 +163,7 @@ const CompFormularioRegistro = () => {
           <div className="form-group checkbox">
             <label htmlFor="remitido">
               <input
-                
+                checked={remitido}
                 type="checkbox"
                 id="remitido"
                 name="remitido"
@@ -202,4 +213,4 @@ const CompFormularioRegistro = () => {
   );
 }
 
-export default CompFormularioRegistro;
+export default EditCompFormularioRegistro;
